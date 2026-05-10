@@ -1,0 +1,56 @@
+/* Dashboard Styles */
+.dashboard-header {
+    margin-bottom: 30px;
+}
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    border: 1px solid #eee;
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card-icon {
+    font-size: 2.5rem;
+    opacity: 0.8;
+}
+
+.card-info h3 {
+    font-size: 0.9rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.card-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #1a1a1a;
+}
+
+/* Cores Temáticas */
+.card-livre .card-icon { color: #2ecc71; }
+.card-ocupada .card-icon { color: #e74c3c; }
+.card-reservada .card-icon { color: #f1c40f; }
+.card-total .card-icon { color: #34495e; }
+
+@media (max-width: 768px) {
+    .card-grid {
+        grid-template-columns: 1fr 1fr; /* Duas colunas no mobile */
+    }
+}

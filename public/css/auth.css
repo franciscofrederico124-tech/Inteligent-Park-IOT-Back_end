@@ -1,0 +1,183 @@
+/* Reset básico */
+* {
+  box-sizing: border-box;
+}
+
+.body {
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #f7f7f7, #e0e0e0);
+  margin: 0;
+  padding: 0;
+  width: 100dvw;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden; /* Remove barras de rolagem */
+}
+
+/* ===== NAVEGAÇÃO ===== */
+.navbar {
+    background: #fff;
+    box-shadow: 0px 0px 16px rgba(85, 85, 85, 0.15);
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+}
+
+.nav-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 12px 32px; /* Reduzido */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.nav-logo i {
+    font-size: 1.5rem;
+    color: #6a0dad;
+}
+
+.nav-menu {
+    display: flex;
+    gap: 30px;
+    list-style: none;
+    margin: 0;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: #666;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+/* ===== CONTEÚDO PRINCIPAL (OCUPA 100% DA ALTURA) ===== */
+main {
+  flex: 1; /* Ocupa o espaço restante abaixo da navbar */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: 60px; /* Compensa a altura da navbar fixa */
+  width: 100%;
+}
+
+/* Estilo geral dos formulários - MAIS COMPACTO */
+form {
+  background: #fff;
+  padding: 32px 32px; /* Reduzido de 50px */
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 380px;
+  max-height: 85vh; /* Garante que caiba na tela */
+  position: relative;
+  transition: transform 0.3s ease;
+}
+
+form:hover {
+  transform: translateY(-4px);
+}
+
+/* Ícone reduzido */
+form > i {
+  font-size: 50px; /* Reduzido de 70px */
+  color: #6a0dad;
+  margin-bottom: 20px;
+}
+
+/* Campos compactos */
+form span {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f5f5f5;
+  padding: 10px 16px; /* Mais fino */
+  border-radius: 10px;
+  margin-bottom: 12px; /* Espaçamento menor */
+  width: 100%;
+}
+
+form span i {
+  font-size: 18px;
+  color: #6a0dad;
+}
+
+form input {
+  border: none;
+  outline: none;
+  background: transparent;
+  flex: 1;
+  font-size: 14px;
+  height: 30px;
+}
+
+/* Botões */
+form button {
+  margin-top: 10px;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  background: #6a0dad;
+  font-weight: 600;
+}
+
+/* Texto abaixo do botão */
+.no-account {
+  margin-top: 20px;
+  font-size: 13px;
+  color: #555;
+  text-decoration: underline;
+  cursor: pointer;
+  text-align: center;
+}
+
+/* Alertas */
+.alert {
+  position: fixed;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  background: #6a0dad;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: top 0.4s ease;
+  z-index: 9999;
+}
+
+.alert.show { top: 20px; }
+.alert.error { background: #d9534f; }
+.alert.success { background: #5cb85c; }
+
+#signUp { display: none; }
+
+/* Responsividade agressiva para telas pequenas */
+@media (max-height: 600px) {
+  form { padding: 15px 20px; }
+  form > i { font-size: 40px; margin-bottom: 10px; }
+  form span { margin-bottom: 8px; }
+}
+
+@media (max-width: 480px) {
+  form { width: 90%; }
+}

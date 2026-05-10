@@ -1,0 +1,28 @@
+{
+  "name": "smart-park-iot",
+  "version": "1.0.0",
+  "description": "A project for to marke space in park cars",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "app.js",
+  "scripts": {
+    "test": "node app.js",
+    "start": "nodemon app.js"
+  },
+  "nodemonConfig": {
+    "ext": "js, json, txt"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.1",
+    "express": "^5.2.1",
+    "express-handlebars": "^9.0.1",
+    "express-session": "^1.19.0",
+    "groq-sdk": "^1.1.2",
+    "handlebars": "^4.7.9",
+    "nodemon": "^3.1.14",
+    "sqlite3": "^6.0.1",
+    "ws": "^8.20.0"
+  }
+}

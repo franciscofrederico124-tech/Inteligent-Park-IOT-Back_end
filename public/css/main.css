@@ -1,0 +1,118 @@
+/* Reset e Base */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+
+body {
+    display: flex;
+    height: 100vh;
+    background-color: #f5f7fa;
+    display: grid;
+    grid-template-columns: 20% 80%;
+}
+
+/* Sidebar */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    align-items: start;
+    background-color: black;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+}
+
+.sidebar .logo {
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.navLinks {
+    background-color: transparent;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    gap: 12px;
+    width: 100%;
+}
+
+.navLinks a {
+    color: #f5f7fa;
+    text-decoration: none;
+    font-weight: 500;
+    border-radius: 16px;
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 16px;
+}
+
+.navLinks a:hover, .navLinks a.active {
+    background: rgb(45, 45, 45);
+    color: #ffcc00;
+}
+
+/* Pseudo-elementos (Desktop) */
+.dashboard:after { content: " Dashboard"; }
+.reservas:after { content: " Suas reservas"; }
+.configuracoes:after { content: " Configurações"; }
+.asssistente:after { content: " Assistente de IA"; }
+
+/* Footer Sidebar */
+.footer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    padding: 16px;
+    width: 100%;
+    cursor: pointer;
+    transition: 0.25s;
+}
+
+.footer:hover {
+    background: rgb(45, 45, 45);
+    color: #ffcc00;
+}
+
+/* Área de Conteúdo */
+.content {
+    flex: 1;
+    padding: 25px;
+    overflow-y: auto;
+}
+
+/* Responsividade */
+@media (max-width: 1024px) {
+    body  {
+        display: grid;
+        grid-template-columns: 100% !important;
+    }
+    .sidebar {
+        flex-direction: row !important;
+        justify-content: center !important;
+        height: 70px;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100vw;
+        z-index: 999;
+    }
+
+    .navLinks { flex-direction: row !important; padding: 0; justify-content: space-around; }
+    .navLinks a { width: auto; padding: 12px; gap: 0; }
+    
+    .dashboard:after, .reservas:after, .configuracoes:after, .asssistente:after,
+    .logo, .footer { display: none !important; }
+
+    .content { padding-bottom: 80px; }
+}
