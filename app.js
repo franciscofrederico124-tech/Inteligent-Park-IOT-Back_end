@@ -2,8 +2,12 @@ const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
 const path = require('path');
-const db = require("./src/config/sqlite3");
-const app = express()
+const bcrypt = require("bcryptjs");
+require("dotenv").config();
+
+const db = require("./src/config/postgresql");
+
+const app = express();
 
 const Agent = require("./src/routes/agent");
 const ContextExtractor = require("./src/routes/contex");
@@ -11,164 +15,285 @@ const ContextExtractor = require("./src/routes/contex");
 
 // --- MIDDLEWARES ---
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(express.urlencoded({
+  extended: true
+}));
 
-app.use(cors({
-  origin: "*", // ajuste para a porta do seu frontend
+app.use(express.static(
+  path.join(__dirname, 'public')
+));
+
+app.use(cors( {
+  origin: "*",
   credentials: true
 }));
 
-// ⚠️ Configuração correta da sessão
-app.use(session({
-  secret: '******', // troque por um segredo forte
+
+// --- SESSION ---
+app.use(session( {
+  secret: process.env.SESSION_SECRET || "secret",
+
   resave: false,
+
   saveUninitialized: false,
+
   cookie: {
     httpOnly: true,
-    secure: false, // true apenas em produção com HTTPS
-    maxAge: 1000 * 60 * 60 // 1 hora
+    secure: false,
+    maxAge: 1000 * 60 * 60
   }
 }));
 
-let user = null;
-let parkData = {
-  "free": 3,
-  "ocupped": 0,
-  "total": 0
-}
 
-// --- FUNÇÃO DE VALIDAÇÃO ---
+// --- DADOS TEMPORÁRIOS ---
+let user = null;
+
+let parkData = {
+  free: 3,
+  ocupped: 0,
+  total: 3
+};
+
+
+// --- VALIDAÇÃO ---
 function Validate(el) {
   return el && el.trim() !== "";
 }
 
+
 // --- LOGIN ---
-app.post("/auth/login", (req, res) => {
-  const { email, password } = req.body;
+app.post("/auth/login", async (req, res) => {
 
-  console.log("Tentando login:", req.body);
+  const {
+    email,
+    password
+  } = req.body;
 
-  if (!Validate(email) || !Validate(password)) {
-    return res.status(400).json({ success: false, message: "Email e senha são obrigatórios!" });
-  }
+  try {
 
-  const sql = "SELECT * FROM users WHERE email = ? AND password = ?";
-  db.get(sql, [email, password], (err, row) => {
-    if (err) {
-      console.error("Erro no banco:", err);
-      return res.status(500).json({ success: false, message: "Erro interno" });
-    }
+    if (
+      !Validate(email) ||
+      !Validate(password)
+    ) {
 
-    if (row) {
-      console.log("Sessão iniciada ✅");
-
-      user = { id: row.id, name: row.name, email: row.email };
-
-      console.log("Sessão salva:", req.session.user);
-
-      return res.json({
-        success: true,
-        message: "Sessão iniciada com sucesso!",
-        user: user,
+      return res.status(400).json({
+        success: false,
+        message: "Email e senha obrigatórios!"
       });
-    } else {
-      console.log("Credenciais inválidas ❌");
-      return res.status(401).json({ success: false, message: "Email ou senha incorretos" });
-    }
-  });
-});
 
-// --- REGISTRO ---
-app.post("/auth/register", (req, res) => {
-  const { name, email, password } = req.body;
-
-  if (!name || !email || !password) {
-    return res.status(400).json({ success: false, message: "Todos os campos são obrigatórios!" });
-  }
-
-  console.log(`Tentando criar conta para: ${email}`);
-
-  const checkUserSql = "SELECT * FROM users WHERE email = ?";
-  db.get(checkUserSql, [email], (err, row) => {
-    if (err) {
-      console.error("Erro na busca:", err);
-      return res.status(500).json({ success: false, message: "Erro no banco de dados" });
     }
 
-    if (row) {
-      return res.status(400).json({ success: false, message: "Este e-mail já está em uso!" });
-    }
+    const result = await db.query(
+      "SELECT * FROM users WHERE email = $1",
+      [email]
+    );
 
-    const insertSql = "INSERT INTO users (name, email, password) VALUES (?, ?, ?)";
-    db.run(insertSql, [name, email, password], function (err) {
-      if (err) {
-        console.error("Erro ao inserir:", err);
-        return res.status(500).json({ success: false, message: "Erro ao salvar usuário" });
-      }
+    const row = result.rows[0];
 
-      console.log(`Usuário criado com ID: ${this.lastID}`);
+    if (!row) {
 
-      return res.json({
-        success: true,
-        message: "Conta criada!",
-        user: { name, email, userId: this.lastID },
+      return res.status(401).json({
+        success: false,
+        message: "Usuário não encontrado!"
       });
-    });
-  });
-});
 
-// --- CHECK SESSION ---
-app.get("/auth/check/", (req, res) => {
-  console.log("Verificando sessão...");
-  console.log("Sessão atual:", user);
+    }
 
-  if (user) {
+    const passwordMatch = await bcrypt.compare(
+      password,
+      row.password
+    );
+
+    if (!passwordMatch) {
+
+      return res.status(401).json({
+        success: false,
+        message: "Senha incorreta!"
+      });
+
+    }
+
+    user = {
+      id: row.id,
+      name: row.name,
+      email: row.email
+    };
+
     return res.json({
       success: true,
-      message: "Sessão iniciada",
-      user: user,
+      message: "Sessão iniciada!",
+      user
     });
-  } else {
-    return res.json({
+
+  } catch (e) {
+
+    console.log(e);
+
+    return res.status(500).json({
       success: false,
-      message: "Nenhuma sessão ativa",
-      user: null,
+      message: "Erro interno!"
     });
+
   }
+
 });
+
+
+// --- REGISTER ---
+app.post("/auth/register", async (req, res) => {
+
+  const {
+    name,
+    email,
+    password
+  } = req.body;
+
+  try {
+
+    if (
+      !name ||
+      !email ||
+      !password
+    ) {
+
+      return res.status(400).json({
+        success: false,
+        message: "Todos campos obrigatórios!"
+      });
+
+    }
+
+    const checkUser = await db.query(
+      "SELECT * FROM users WHERE email = $1",
+      [email]
+    );
+
+    if (checkUser.rows.length > 0) {
+
+      return res.status(400).json({
+        success: false,
+        message: "Email já existe!"
+      });
+
+    }
+
+    const hash = await bcrypt.hash(
+      password,
+      10
+    );
+
+    const result = await db.query(
+      `
+      INSERT INTO users(
+      name,
+      email,
+      password
+      )
+
+      VALUES($1, $2, $3)
+
+      RETURNING id
+      `,
+      [name, email, hash]
+    );
+
+    return res.json({
+      success: true,
+      message: "Conta criada!",
+
+      user: {
+        id: result.rows[0].id,
+        name,
+        email
+      }
+    });
+
+  } catch (e) {
+
+    console.log(e);
+
+    return res.status(500).json({
+      success: false,
+      message: "Erro interno!"
+    });
+
+  }
+
+});
+
+
+// --- CHECK SESSION ---
+app.get("/auth/check", (req, res) => {
+
+  if (user) {
+
+    return res.json({
+      success: true,
+      message: "Sessão activa",
+      user
+    });
+
+  }
+
+  return res.json({
+    success: false,
+    message: "Nenhuma sessão",
+    user: null
+  });
+
+});
+
 
 // --- LOGOUT ---
 app.post("/auth/logout", (req, res) => {
+
   try {
-    console.log("Sessão termininada! ");
 
     user = null;
-    return res.json({
-      session: true,
-      message: "Sessão terminada! "
-    })
-  }
-  catch (e) {
 
-    console.log("Errro no sistema", e);
     return res.json({
+      success: true,
+      message: "Sessão terminada!"
+    });
+
+  } catch (e) {
+
+    console.log(e);
+
+    return res.status(500).json({
       success: false,
-      message: `erro: ${e.message}`,
-    })
+      message: e.message
+    });
+
   }
+
 });
 
-app.post("/assitent/ask", Agent);
-app.post("/assitent/assistent/ask/context", ContextExtractor);
+
+// --- IA ---
+app.post(
+  "/assitent/ask",
+  Agent
+);
+
+app.post(
+  "/assitent/assistent/ask/context",
+  ContextExtractor
+);
 
 
-// --- ROTA DE RECEBIMENTO (VEM DO ESP32) ---
+// --- RECEBER DADOS ESP32 ---
 app.post("/park/data/receiv", (req, res) => {
-  const { data } = req.body;
 
-  console.log("Dados brutos recebidos do ESP32:", req.body);
+  const {
+    data
+  } = req.body;
+
+  console.log(
+    "Dados recebidos:",
+    req.body
+  );
 
   if (data) {
 
@@ -178,34 +303,41 @@ app.post("/park/data/receiv", (req, res) => {
       total: data.total
     };
 
-    console.log("Dados recebidos do esp32:", parkData);
+    return res.status(200).json({
+      success: true,
+      message: "Dados recebidos!"
+    });
 
-    return res.status(200).json({ success: true, message: "Dados recebidos" });
-  } else {
-    console.log("Dados não encontrados no corpo da requisição ❌");
-    return res.status(400).json({ success: false, message: "Estrutura de dados inválida" });
   }
+
+  return res.status(400).json({
+    success: false,
+    message: "Dados inválidos!"
+  });
+
 });
 
 
+// --- ENVIAR DADOS FRONTEND ---
 app.post("/park/data/send", (req, res) => {
- 
-  if (parkData && typeof parkData.free !== 'undefined') {
-    console.log("Enviando parkData para o Frontend:", parkData);
-    return res.json(parkData);
-  } else {
-    console.log("Dados de estacionamento ainda não disponíveis.");
-    return res.json({
-      "free": 0,
-      "ocupped": 0,
-      "total": 3
-    });
-  }
+
+  return res.json(parkData);
+
 });
 
 
 // --- SERVER ---
-const PORT = process.env.PORT || 3000;
+const PORT =
+process.env.PORT || 3000;
+
 app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT} \n http://localhost:${PORT}`);
+
+  console.log(`
+  > ----------------------------
+  > 🚀 Servidor iniciado!
+  >
+  > http://localhost:${PORT}
+  > -------------------------------
+    `);
+
 });
